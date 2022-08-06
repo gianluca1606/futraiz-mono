@@ -11,35 +11,219 @@ datasource db {
 }
 
 model User {
-  id         String       @unique @default(uuid())
-  email      String       @unique
-  name       String?
-  password   String?
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  LoginToken LoginToken[]
-  Post       Post[]
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  username    String?
+  password    String?
+  bio         String?
+  pictureId   String?
+  roles       String[]
+  posts       Post[]
+  clubs       Club[]
+  ligas       Liga[]
+  player      Player?
+  referee     Referee?
+  tryedLogins Int      @default(0)
+
+  isActive  Boolean? @default(true)
+  isDeleted Boolean? @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  lastLogin DateTime @default(now())
+
+  managersOfClubs ManagersOfClubs[]
+  likesOnPosts    LikesOnPosts[]
+  likesOnComments LikesOnComments[]
+  Tickets         Tickets[]
+  Comment         Comment[]
 }
 
-model LoginToken {
-  id        String   @unique @default(uuid())
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  redirect  String   @default("/")
+model Player {
+  id              Int               @id @default(autoincrement())
+  firstName       String
+  lastName        String
+  nickName        String?
+  birthDate       DateTime
+  birthCity       String?
+  birthCountry    String?
+  pictureId       String?
+  height          Float?
+  weight          Float?
+  linkedToAccount User?             @relation(fields: [userId], references: [id])
+  userId          Int?              @unique
+  isActive        Boolean?          @default(true)
+  isDeleted       Boolean?          @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @default(now())
+  TransferHistory TransferHistory[]
 }
 
 model Post {
-  id        String   @unique @default(uuid())
-  title     String
-  body      String
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  viewCount Int      @default(0)
+
+  likes    LikesOnPosts[]
+  comments Comment[]
+  User     User?          @relation(fields: [userId], references: [id])
+  userId   Int?
 }
 
-model Rating {
-  id   String   @unique @default(uuid())
-  time DateTime
+model LikesOnPosts {
+  post   Post @relation(fields: [postId], references: [id])
+  postId Int // relation scalar field (used in the `@relation` attribute above)
+  user   User @relation(fields: [userId], references: [id])
+  userId Int // relation scalar field (used in the `@relation` attribute above)
+
+  @@id([postId, userId])
+}
+
+model LikesOnComments {
+  comment   Comment @relation(fields: [commentId], references: [id])
+  commentId Int // relation scalar field (used in the `@relation` attribute above)
+  user      User    @relation(fields: [userId], references: [id])
+  userId    Int // relation scalar field (used in the `@relation` attribute above)
+
+  @@id([commentId, userId])
+}
+
+model Comment {
+  id              Int               @id @default(autoincrement())
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  content         String
+  likesOnComments LikesOnComments[]
+  post            Post              @relation(fields: [postId], references: [id])
+  postId          Int
+  User            User              @relation(fields: [userId], references: [id])
+  userId          Int
+}
+
+model Club {
+  id              Int               @id @default(autoincrement())
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  name            String
+  street          String
+  postcode        String
+  city            String
+  pictureId       String?
+  createdBy       User              @relation(fields: [userId], references: [id])
+  userId          Int
+  transferHistory TransferHistory[]
+  hostGames       Match[]           @relation(name: "HostGames")
+  awayGames       Match[]
+  managersOfClubs ManagersOfClubs[]
+}
+
+model ManagersOfClubs {
+  user   User @relation(fields: [userId], references: [id])
+  userId Int // relation scalar field (used in the `@relation` attribute above)
+  clubs  Club @relation(fields: [clubId], references: [id])
+  clubId Int // relation scalar field (used in the `@relation` attribute above)
+
+  @@id([userId, clubId])
+}
+
+model Liga {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  pictureId String?
+  createdBy User     @relation(fields: [userId], references: [id])
+  userId    Int
+  match     Match[]
+  region    Region   @relation(fields: [regionId], references: [id])
+  regionId  Int
+}
+
+model TransferHistory {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  transferTime DateTime
+  movedTo      Club     @relation(fields: [clubId], references: [id])
+  clubId       Int
+  player       Player   @relation(fields: [playerId], references: [id])
+  playerId     Int
+}
+
+model Match {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  matchTime    DateTime
+  liga         Liga?    @relation(fields: [ligaId], references: [id])
+  ligaId       Int?
+  friendlyGame Boolean?
+  street       String
+  postcode     String
+  city         String
+  gallery      Gallery?
+  host         Club     @relation(name: "HostGames", fields: [hostId], references: [id])
+  hostId       Int
+  opponent     Club     @relation(fields: [opponentId], references: [id])
+  opponentId   Int
+}
+
+model Referee {
+  id        Int      @id @unique @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  firstName String
+  lastName  String
+  nickName  String
+  birthDate DateTime
+  birthCity String?
+  height    Float
+  weight    Float
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int      @unique
+}
+
+model Region {
+  id             Int      @id @unique @default(autoincrement())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  name           String
+  nameId         String
+  shortName      String
+  pictureId      String?
+  liga           Liga[]
+  Region         Region[] @relation("RegionChilren")
+  parentRegion   Region?  @relation("RegionChilren", fields: [parentRegionId], references: [id])
+  parentRegionId Int?
+}
+
+model Gallery {
+  id             Int               @id @unique @default(autoincrement())
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  match          Match             @relation(fields: [matchId], references: [id])
+  matchId        Int               @unique
+  galleyPictures GalleryPictures[]
+}
+
+model GalleryPictures {
+  id        Int      @id @unique @default(autoincrement())
+  createdAt DateTime @default(now())
+  pictureId String?
+  path      String
+  gallery   Gallery? @relation(fields: [galleryId], references: [id])
+  galleryId Int?
+}
+
+model Tickets {
+  id         Int      @id @unique @default(autoincrement())
+  user       User?    @relation(fields: [userId], references: [id])
+  title      String
+  resourceId String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     Int?
 }

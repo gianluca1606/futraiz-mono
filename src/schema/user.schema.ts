@@ -1,8 +1,12 @@
 import z from "zod";
 
+const regexPassword =
+  "/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{8,})/";
+// TODO Regex für vernünftige Passwörter
+// .regex(new RegExp(regexPassword)
 export const createUserSchema = z.object({
-  name: z.string(),
   email: z.string().email(),
+  password: z.string().min(10),
 });
 
 export const createUserOutputSchema = z.object({

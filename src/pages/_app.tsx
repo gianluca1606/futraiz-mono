@@ -1,16 +1,13 @@
-import "../styles/globals.css";
-import type { AppProps } from "next/app";
-import { withTRPC } from "@trpc/next";
-import { loggerLink } from "@trpc/client/links/loggerLink";
 import { httpBatchLink } from "@trpc/client/links/httpBatchLink";
+import { loggerLink } from "@trpc/client/links/loggerLink";
+import { withTRPC } from "@trpc/next";
+import type { AppProps } from "next/app";
 import superjson from "superjson";
-import { AppRouter } from "../server/route/app.router";
 import { url } from "../constants";
-import { trpc } from "../utils/trpc";
 import { UserContextProvider } from "../context/user.context";
-import { Head } from "next/document";
-import Script from "next/script";
-import { NextSeo } from "next-seo";
+import { AppRouter } from "../server/router/app.router";
+import "../styles/globals.css";
+import { trpc } from "../utils/trpc";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const { data, error, isLoading } = trpc.useQuery(["users.me"]);
@@ -20,10 +17,6 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <>
-      <NextSeo
-        title="Dream Activies"
-        description="A short description goes here."
-      />
       <UserContextProvider value={data}>
         {" "}
         <main>

@@ -1,6 +1,6 @@
 import { inferProcedureOutput } from "@trpc/server";
 import { createContext, useContext } from "react";
-import { AppRouter } from "../server/route/app.router";
+import { AppRouter } from "../server/router/app.router";
 
 const UserContext = createContext<InferQueryOutput<"users.me">>(null);
 

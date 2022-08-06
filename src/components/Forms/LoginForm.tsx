@@ -2,8 +2,8 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { CreateUserInput, requestOtpinput } from "../schema/user.schema";
-import { trpc } from "../utils/trpc";
+import { CreateUserInput, requestOtpinput } from "../../schema/user.schema";
+import { trpc } from "../../utils/trpc";
 import { useEffect } from "react";
 
 function VerifyToken({ hash }: { hash: string }) {
@@ -26,17 +26,19 @@ const LoginForm = () => {
 
   useEffect(() => {
     // @ts-ignore
-    const google = window.google;
-    google.accounts.id.initialize({
+    window.google?.accounts.id.initialize({
       client_id:
         "721956373209-9vaenig8tm7g88lb9nm48tm1656ub2lo.apps.googleusercontent.com",
       callback: handleCallbackResponse,
     });
-
-    google.accounts.id.renderButton(document.getElementById("google-div"), {
-      theme: "outline",
-      size: "large",
-    });
+    // @ts-ignore
+    window.google?.accounts.id.renderButton(
+      document.getElementById("google-div"),
+      {
+        theme: "outline",
+        size: "large",
+      }
+    );
   }, []);
 
   const { handleSubmit, register } = useForm<CreateUserInput>();

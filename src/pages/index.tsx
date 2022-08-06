@@ -1,19 +1,9 @@
 import type { NextPage } from "next";
-import { NextSeo } from "next-seo";
-import { Head } from "next/document";
-import Link from "next/link";
-import Script from "next/script";
 import { MainLayout } from "../components/Layout/MainLayout";
-import LoginForm from "../components/LoginForm";
 import { useUserContext } from "../context/user.context";
-import { trpc } from "../utils/trpc";
 
 const Home: NextPage = () => {
   const user = useUserContext();
-
-  if (!user) {
-    return <LoginForm />;
-  }
 
   return (
     <>

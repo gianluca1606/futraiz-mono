@@ -18,14 +18,17 @@ export const userRouter = createRouter()
   .mutation("register-user", {
     input: createUserSchema,
     resolve: async ({ ctx, input }) => {
-      const { email, name } = input;
+      const { email, password } = input;
       try {
         const user = await ctx.prisma.user.create({
           data: {
             email,
-            name,
+            password,
           },
         });
+
+        // TODO token generieren
+        return user;
       } catch (e) {
         if (e instanceof PrismaClientKnownRequestError) {
           if (e.code === "P2002") {
@@ -46,7 +49,7 @@ export const userRouter = createRouter()
     input: requestOtpSchema,
     async resolve({ input, ctx }) {
       const { email, redirect } = input;
-      const user = await ctx.prisma.user.findUnique({
+      /*const user = await ctx.prisma.user.findUnique({
         where: {
           email,
         },
@@ -73,7 +76,7 @@ export const userRouter = createRouter()
         token: encode(`${token.id}:${user.email}`),
         url: url,
         email: user.email,
-      });
+      });*/
 
       return true;
     },
@@ -84,7 +87,7 @@ export const userRouter = createRouter()
       const decoded = decode(input.hash).split(":");
       const [id, email] = decoded;
 
-      const token = await ctx.prisma.loginToken.findFirst({
+      /* const token = await ctx.prisma.loginToken.findFirst({
         where: {
           id,
           user: {
@@ -112,7 +115,7 @@ export const userRouter = createRouter()
 
       return {
         redirect: token.redirect,
-      };
+      };*/
     },
   })
   .query("me", {
