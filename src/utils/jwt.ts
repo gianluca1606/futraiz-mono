@@ -9,3 +9,7 @@ export function signJwt(data: Object) {
 export function verifyJwt<T>(token: string) {
   return jwt.verify(token, SECRET) as T;
 }
+
+export function decodeJwt<T>(token: string) {
+  return jwt.decode(token) as T;
+}

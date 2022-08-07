@@ -1,33 +1,37 @@
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
+import * as trpc from "@trpc/server";
+import * as bcrypt from "bcryptjs";
+import { serialize } from "cookie";
 import {
-  createUserOutputSchema,
   createUserSchema,
+  googleSchema,
   loginSchema,
   requestOtpSchema,
   verifyOptSchema,
 } from "../../schema/user.schema";
+import { decode } from "../../utils/base64";
+import { decodeJwt, signJwt } from "../../utils/jwt";
+import { notFoundError } from "../../utils/trpcUtil";
 import { createRouter } from "../createRouter";
-import * as trpc from "@trpc/server";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime";
-import { sendLoginEmail } from "../../utils/mailer";
-import { url } from "../../constants";
-import { decode, encode } from "../../utils/base64";
-import { signJwt } from "../../utils/jwt";
-import { serialize } from "cookie";
 
 export const userRouter = createRouter()
   .mutation("register-user", {
     input: createUserSchema,
     resolve: async ({ ctx, input }) => {
       const { email, password } = input;
+
+      const salt = bcrypt.genSaltSync(10);
+      const hash = bcrypt.hashSync(password, salt);
       try {
         const user = await ctx.prisma.user.create({
           data: {
             email,
-            password,
+            password: hash,
+            isActive: false,
           },
         });
 
-        // TODO token generieren
+        // TODO Email rausschicken um user zu bestätigen
         return user;
       } catch (e) {
         if (e instanceof PrismaClientKnownRequestError) {
@@ -125,10 +129,89 @@ export const userRouter = createRouter()
   })
   .mutation("login", {
     input: loginSchema,
-    async resolve({ input, ctx }) {},
+    async resolve({ input, ctx }) {
+      const { email, password } = input;
+
+      const user = await ctx.prisma.user.findUnique({ where: { email } });
+      if (!user) {
+        notFoundError();
+      }
+
+      if (user!.isActive === false || user!.tryedLogins > 3) {
+        throw new trpc.TRPCError({
+          code: "FORBIDDEN",
+          message: "User is blocked",
+        });
+      }
+      let passwordOk = false;
+      if (user?.password) {
+        passwordOk = bcrypt.compareSync(password, user!.password!);
+      } else {
+        await ctx.prisma.user.update({
+          data: {
+            tryedLogins: user!.tryedLogins + 1 || 1,
+          },
+          where: {
+            id: user!.id,
+          },
+        });
+      }
+
+      if (passwordOk) {
+        const jwt = signJwt({
+          email: user!.email,
+          id: user!.id,
+          name: user!.username,
+          roles: user?.roles,
+        });
+
+        // TODO token gültigkeit anpassen
+        ctx.res.setHeader("Set-Cookie", serialize("token", jwt));
+        return { success: true };
+      } else {
+        throw new trpc.TRPCError({
+          code: "FORBIDDEN",
+          message: "Invalid passsword",
+        });
+      }
+    },
   })
   .mutation("google-login", {
+    input: googleSchema,
     async resolve({ input, ctx }) {
-      console.log(input);
+      // TODO verify mit Client Secret von google
+      let googleUser: { email: string } = decodeJwt(input.token);
+      let user = null;
+      if (googleUser.email) {
+        user = await ctx.prisma.user.findUnique({
+          where: { email: googleUser.email },
+        });
+      }
+
+      if (!user) {
+        user = await ctx.prisma.user.create({
+          data: {
+            email: googleUser.email,
+          },
+        });
+      } else {
+        if (user!.isActive === false || user!.tryedLogins > 3) {
+          throw new trpc.TRPCError({
+            code: "FORBIDDEN",
+            message: "User is blocked",
+          });
+        }
+      }
+
+      const jwt = signJwt({
+        email: user.email,
+        id: user.id,
+        name: user.username,
+        roles: user.roles,
+      });
+
+      // TODO token gültigkeit anpassen
+      ctx.res.setHeader("Set-Cookie", serialize("token", jwt));
+      return { success: true };
     },
   });

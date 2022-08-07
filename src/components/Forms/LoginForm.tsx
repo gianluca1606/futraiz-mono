@@ -6,22 +6,18 @@ import { CreateUserInput, requestOtpinput } from "../../schema/user.schema";
 import { trpc } from "../../utils/trpc";
 import { useEffect } from "react";
 
-function VerifyToken({ hash }: { hash: string }) {
-  const router = useRouter();
-  const { data, isLoading } = trpc.useQuery(["users.verify-otp", { hash }]);
-  if (isLoading) {
-    return <p> Verifying...</p>;
-  }
-
-  router.push(data?.redirect.includes("login") ? "/" : data?.redirect || "/");
-
-  return <p>Redirecting </p>;
-}
-
 const LoginForm = () => {
+  const { error, mutate, data } = trpc.useMutation(["users.login"]);
+  const googleLogin = trpc.useMutation(["users.google-login"], {
+    onSuccess: (data) => {
+      router.push("/");
+    },
+    onError: (error) => {
+      // TODO handle error
+    },
+  });
   function handleCallbackResponse(response: any) {
-    // TODO hier response.credentials, damit request starten, gucken ob user nicht schon existiert, ansonsten user erstellen und login
-    console.log(response);
+    googleLogin.mutate({ token: response.credential });
   }
 
   useEffect(() => {
@@ -44,24 +40,18 @@ const LoginForm = () => {
   const { handleSubmit, register } = useForm<CreateUserInput>();
   const router = useRouter();
   const [success, setSuccess] = useState(false);
-  const { mutate, error } = trpc.useMutation(["users.request-otp"], {
-    onSuccess: () => {
-      router.push("/login");
-    },
-  });
+
   function onSubmit(values: CreateUserInput) {
-    mutate({ ...values, redirect: router.asPath });
+    mutate({ ...values });
+    if (data) {
+      router.push("/");
+    }
   }
 
-  const hash = router.asPath.split("#token=")[1];
-
-  if (hash) {
-    return <VerifyToken hash={hash} />;
-  }
   return (
     <>
       <div className="w-96 h-96">
-        <form>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-6">
             <label
               htmlFor="email"
@@ -74,6 +64,7 @@ const LoginForm = () => {
               id="email"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               placeholder="name@flowbite.com"
+              {...register("email")}
               required
             />
           </div>
@@ -88,6 +79,7 @@ const LoginForm = () => {
               type="password"
               id="password"
               className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              {...register("password")}
               required
             />
           </div>
