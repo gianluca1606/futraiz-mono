@@ -11,10 +11,10 @@ function Footer() {
           <img
             src="https://flowbite.com/docs/images/logo.svg"
             className="mr-3 h-8"
-            alt="Flowbite Logo"
+            alt="Futraiz Logo"
           />
           <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
-            Flowbite
+            Futraiz
           </span>
         </a>
         <ul className="flex flex-wrap items-center mb-6 text-sm text-gray-500 sm:mb-0 dark:text-gray-400">
@@ -44,7 +44,7 @@ function Footer() {
       <span className="block text-sm text-gray-500 sm:text-center dark:text-gray-400">
         © 2022{" "}
         <a href="https://flowbite.com/" className="hover:underline">
-          Dream Activities
+          Futraiz
         </a>
         . All Rights Reserved.
       </span>
