@@ -146,15 +146,6 @@ export const userRouter = createRouter()
       let passwordOk = false;
       if (user?.password) {
         passwordOk = bcrypt.compareSync(password, user!.password!);
-      } else {
-        await ctx.prisma.user.update({
-          data: {
-            tryedLogins: user!.tryedLogins + 1 || 1,
-          },
-          where: {
-            id: user!.id,
-          },
-        });
       }
 
       if (passwordOk) {
@@ -169,6 +160,14 @@ export const userRouter = createRouter()
         ctx.res.setHeader("Set-Cookie", serialize("token", jwt));
         return { success: true };
       } else {
+        await ctx.prisma.user.update({
+          data: {
+            tryedLogins: user!.tryedLogins + 1 || 1,
+          },
+          where: {
+            id: user!.id,
+          },
+        });
         throw new trpc.TRPCError({
           code: "FORBIDDEN",
           message: "Invalid passsword",
@@ -185,6 +184,11 @@ export const userRouter = createRouter()
       if (googleUser.email) {
         user = await ctx.prisma.user.findUnique({
           where: { email: googleUser.email },
+        });
+      } else {
+        throw new trpc.TRPCError({
+          code: "BAD_REQUEST",
+          message: "Something wrong happened",
         });
       }
 

@@ -11,7 +11,7 @@ datasource db {
 }
 
 model User {
-  id          Int      @id @default(autoincrement())
+  id          String   @unique @default(uuid())
   email       String   @unique
   username    String?
   password    String?
@@ -39,7 +39,7 @@ model User {
 }
 
 model Player {
-  id              Int               @id @default(autoincrement())
+  id              String            @id @default(uuid())
   firstName       String
   lastName        String
   nickName        String?
@@ -50,7 +50,7 @@ model Player {
   height          Float?
   weight          Float?
   linkedToAccount User?             @relation(fields: [userId], references: [id])
-  userId          Int?              @unique
+  userId          String?           @unique
   isActive        Boolean?          @default(true)
   isDeleted       Boolean?          @default(false)
   createdAt       DateTime          @default(now())
@@ -59,7 +59,7 @@ model Player {
 }
 
 model Post {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   title     String
@@ -69,42 +69,42 @@ model Post {
 
   likes    LikesOnPosts[]
   comments Comment[]
-  User     User?          @relation(fields: [userId], references: [id])
-  userId   Int?
+  user     User?          @relation(fields: [userId], references: [id])
+  userId   String?
 }
 
 model LikesOnPosts {
-  post   Post @relation(fields: [postId], references: [id])
-  postId Int // relation scalar field (used in the `@relation` attribute above)
-  user   User @relation(fields: [userId], references: [id])
-  userId Int // relation scalar field (used in the `@relation` attribute above)
+  post   Post   @relation(fields: [postId], references: [id])
+  postId String // relation scalar field (used in the `@relation` attribute above)
+  user   User   @relation(fields: [userId], references: [id])
+  userId String // relation scalar field (used in the `@relation` attribute above)
 
   @@id([postId, userId])
 }
 
 model LikesOnComments {
   comment   Comment @relation(fields: [commentId], references: [id])
-  commentId Int // relation scalar field (used in the `@relation` attribute above)
+  commentId String // relation scalar field (used in the `@relation` attribute above)
   user      User    @relation(fields: [userId], references: [id])
-  userId    Int // relation scalar field (used in the `@relation` attribute above)
+  userId    String // relation scalar field (used in the `@relation` attribute above)
 
   @@id([commentId, userId])
 }
 
 model Comment {
-  id              Int               @id @default(autoincrement())
+  id              String            @id @default(uuid())
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   content         String
   likesOnComments LikesOnComments[]
   post            Post              @relation(fields: [postId], references: [id])
-  postId          Int
-  User            User              @relation(fields: [userId], references: [id])
-  userId          Int
+  postId          String
+  user            User              @relation(fields: [userId], references: [id])
+  userId          String
 }
 
 model Club {
-  id              Int               @id @default(autoincrement())
+  id              String            @id @default(uuid())
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   name            String
@@ -113,7 +113,7 @@ model Club {
   city            String
   pictureId       String?
   createdBy       User              @relation(fields: [userId], references: [id])
-  userId          Int
+  userId          String
   transferHistory TransferHistory[]
   hostGames       Match[]           @relation(name: "HostGames")
   awayGames       Match[]
@@ -121,58 +121,58 @@ model Club {
 }
 
 model ManagersOfClubs {
-  user   User @relation(fields: [userId], references: [id])
-  userId Int // relation scalar field (used in the `@relation` attribute above)
-  clubs  Club @relation(fields: [clubId], references: [id])
-  clubId Int // relation scalar field (used in the `@relation` attribute above)
+  user   User   @relation(fields: [userId], references: [id])
+  userId String // relation scalar field (used in the `@relation` attribute above)
+  clubs  Club   @relation(fields: [clubId], references: [id])
+  clubId String // relation scalar field (used in the `@relation` attribute above)
 
   @@id([userId, clubId])
 }
 
 model Liga {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   name      String
   pictureId String?
   createdBy User     @relation(fields: [userId], references: [id])
-  userId    Int
+  userId    String
   match     Match[]
   region    Region   @relation(fields: [regionId], references: [id])
-  regionId  Int
+  regionId  String
 }
 
 model TransferHistory {
-  id           Int      @id @default(autoincrement())
+  id           String   @id @default(uuid())
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   transferTime DateTime
   movedTo      Club     @relation(fields: [clubId], references: [id])
-  clubId       Int
+  clubId       String
   player       Player   @relation(fields: [playerId], references: [id])
-  playerId     Int
+  playerId     String
 }
 
 model Match {
-  id           Int      @id @default(autoincrement())
+  id           String   @id @default(uuid())
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   matchTime    DateTime
   liga         Liga?    @relation(fields: [ligaId], references: [id])
-  ligaId       Int?
+  ligaId       String?
   friendlyGame Boolean?
   street       String
   postcode     String
   city         String
   gallery      Gallery?
   host         Club     @relation(name: "HostGames", fields: [hostId], references: [id])
-  hostId       Int
+  hostId       String
   opponent     Club     @relation(fields: [opponentId], references: [id])
-  opponentId   Int
+  opponentId   String
 }
 
 model Referee {
-  id        Int      @id @unique @default(autoincrement())
+  id        String   @id @unique @default(uuid())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   firstName String
@@ -183,11 +183,11 @@ model Referee {
   height    Float
   weight    Float
   user      User     @relation(fields: [userId], references: [id])
-  userId    Int      @unique
+  userId    String   @unique
 }
 
 model Region {
-  id             Int      @id @unique @default(autoincrement())
+  id             String   @id @unique @default(uuid())
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   name           String
@@ -197,33 +197,33 @@ model Region {
   liga           Liga[]
   Region         Region[] @relation("RegionChilren")
   parentRegion   Region?  @relation("RegionChilren", fields: [parentRegionId], references: [id])
-  parentRegionId Int?
+  parentRegionId String?
 }
 
 model Gallery {
-  id             Int               @id @unique @default(autoincrement())
+  id             String            @id @unique @default(uuid())
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   match          Match             @relation(fields: [matchId], references: [id])
-  matchId        Int               @unique
+  matchId        String            @unique
   galleyPictures GalleryPictures[]
 }
 
 model GalleryPictures {
-  id        Int      @id @unique @default(autoincrement())
+  id        String   @id @unique @default(uuid())
   createdAt DateTime @default(now())
   pictureId String?
   path      String
   gallery   Gallery? @relation(fields: [galleryId], references: [id])
-  galleryId Int?
+  galleryId String?
 }
 
 model Tickets {
-  id         Int      @id @unique @default(autoincrement())
+  id         String   @id @unique @default(uuid())
   user       User?    @relation(fields: [userId], references: [id])
   title      String
   resourceId String   @unique
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  userId     Int?
+  userId     String?
 }

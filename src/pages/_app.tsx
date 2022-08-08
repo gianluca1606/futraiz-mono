@@ -8,6 +8,8 @@ import { UserContextProvider } from "../context/user.context";
 import { AppRouter } from "../server/router/app.router";
 import "../styles/globals.css";
 import { trpc } from "../utils/trpc";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function MyApp({ Component, pageProps }: AppProps) {
   const { data, error, isLoading } = trpc.useQuery(["users.me"]);
@@ -22,6 +24,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <main>
           <Component {...pageProps} />
         </main>
+        <ToastContainer />
       </UserContextProvider>
     </>
   );
